@@ -2,6 +2,37 @@
 #include <vector>
 
 #include "Matrix.h"
+#include "Test.h"
+
+void deleteFiles(const std::string &matrixFileName, const std::string &filterFileName){
+    std::cout<<"Delete input files after the operations on them\n";
+    if(std::remove(matrixFileName.c_str())==0){
+        std::cout<<matrixFileName<<" was deleted successfully\n";
+    }
+    else{
+        std::cout<<"there was an error during the deletion of file "<<matrixFileName<<'\n';
+    }
+    if(std::remove(filterFileName.c_str())==0){
+        std::cout<<filterFileName<<" was deleted successfully\n";
+    }
+    else{
+        std::cout<<"there was an error during the deletion of file "<<filterFileName<<'\n';
+    }
+}
+
+std::vector<std::vector<int>> userMatrix(int rowNum, int colNum){
+    std::vector<std::vector<int>>retUserMatrix(rowNum);
+    int num;
+    std::cout<<"Input the matrix on the next steps\n";
+    for(int i=0; i<rowNum; i++){
+        std::cout<<"Input the elements of row: "<<i<<'\n';
+        for(int j=0; j<colNum; j++){
+            std::cin>>num;
+            retUserMatrix[i].push_back(num);
+        }
+    }
+    return retUserMatrix;
+}
 
 int main(){
     int numOfMatrices, numOfFilters;
@@ -11,16 +42,15 @@ int main(){
     std::cout<<"Write the number of input filters that you want to create: ";
     std::cin>>numOfFilters;
 
-    std::string matFileName;
+    std::string matrixFileName;
     std::cout<<"Specify the filename that you want to write the matrices in: ";
-    std::cin>>matFileName;
-    Matrix::writeNumOfMatrices(matFileName, numOfMatrices);
+    std::cin>>matrixFileName;
+    Matrix::writeNumOfMatrices(matrixFileName, numOfMatrices);
 
-
-    std::string filtersFileName;
+    std::string filterFileName;
     std::cout<<"Specify the filename that you want to write the filters in: ";
-    std::cin>>filtersFileName;
-    Matrix::writeNumOfMatrices(filtersFileName, numOfFilters);
+    std::cin>>filterFileName;
+    Matrix::writeNumOfMatrices(filterFileName, numOfFilters);
 
     std::vector<Matrix>writeMatrices(numOfMatrices);
     std::vector<Matrix>writeFilters(numOfFilters);
@@ -28,50 +58,59 @@ int main(){
     //fill in matrices vector and write it to the file
     int numOfRows, numOfCols;
 
+
     for(int i=0; i<numOfMatrices; i++){
         std::cout<<"Write the dimensions of the matrix, number of rows and columns respectively: ";
-
         std::cin>>numOfRows>>numOfCols;
         writeMatrices[i].setRowColVal(numOfRows, numOfCols);
-        writeMatrices[i].fillRandNums();
-        writeMatrices[i].writeToFile(matFileName);
+
+        int randomFill=0;
+        std::cout<<"Please specify 1 if you want to input the matrices yourself, or 0 if you want the application to create "
+                   "randomized matrices with the given sizes: ";
+        std::cin>>randomFill;
+        if(!randomFill){
+            writeMatrices[i].fillRandNums();
+        }
+        else{
+            writeMatrices[i].setMatrix(userMatrix(numOfRows, numOfCols));
+        }
+        writeMatrices[i].writeToFile(matrixFileName);
     }
 
     for(int i=0; i<numOfFilters; i++){
         std::cout<<"Write the dimensions of the filter matrix, number of rows and columns respectively: ";
         std::cin>>numOfRows>>numOfCols;
         writeFilters[i].setRowColVal(numOfRows, numOfCols);
-        writeFilters[i].fillRandNums();
-        writeFilters[i].writeToFile(filtersFileName);
-    }
-
-    //reading from file
-    std::cout<<"Read matrices from: "<<matFileName<<'\n';
-    std::vector<Matrix>readMatrices=Matrix::readFromFile(matFileName);
-    for(int matIt=0; matIt<readMatrices.size(); matIt++){
-        for(int i=0; i<readMatrices[matIt].getMatrix().size(); i++){
-            for(int j=0; j<readMatrices[matIt].getMatrix()[0].size(); j++){
-                std::cout<<readMatrices[matIt].getMatrix()[i][j]<<" ";
-            }
-            std::cout<<'\n';
+        int randomFill=0;
+        std::cout<<"Please specify 1 if you want to input the matrix yourself, or 0 if you want the application to create "
+                   "it using random elements: ";
+        std::cin>>randomFill;
+        if(!randomFill){
+            writeFilters[i].fillRandNums();
         }
+        else{
+            writeFilters[i].setMatrix(userMatrix(numOfRows, numOfCols));
+        }
+        writeFilters[i].writeToFile(filterFileName);
     }
 
-    std::cout<<"Read filters from: "<<filtersFileName<<'\n';
+    //reading both main and filter matrices from files and printing them out
+    std::cout<<"Read matrices from: "<<matrixFileName<<'\n';
+    std::vector<Matrix>readMatrices=Matrix::readFromFile(matrixFileName);
+    for(int i=0; i<readMatrices.size(); i++){
+        readMatrices[i].printMatrix();
+    }
+
+    std::cout<<"Read filters from: "<<filterFileName<<'\n';
     Matrix m;
-    std::vector<Matrix>readFilters=Matrix::readFromFile(filtersFileName);
+    std::vector<Matrix>readFilters=Matrix::readFromFile(filterFileName);
 
-    for(int filterIt=0; filterIt<readFilters.size(); filterIt++){
-        for(int i=0; i<readFilters[filterIt].getMatrix().size(); i++){
-            for(int j=0; j<readFilters[filterIt].getMatrix()[0].size(); j++){
-                std::cout<<readFilters[filterIt].getMatrix()[i][j]<<" ";
-            }
-            std::cout<<'\n';
-        }
+    for(int i=0; i<readFilters.size(); i++){
+        readFilters[i].printMatrix();
     }
 
     //convolution part
-    Matrix out;
+    Matrix originalMatrix;
     int filterMatIndex, mainMatIndex;
     std::cout<<"Input the main matrix index that you would like to apply the filter on: ";
     std::cin>>mainMatIndex;
@@ -87,36 +126,22 @@ int main(){
         return -1;
     }
     else{
-        out.setRowColVal(readMatrices[mainMatIndex].getRow()-(readFilters[filterMatIndex].getRow())+1,
-                         readMatrices[mainMatIndex].getCol()-(readFilters[filterMatIndex].getCol())+1);
-        out=readMatrices[mainMatIndex].applyFilter(readFilters[filterMatIndex]);
+        originalMatrix=readMatrices[mainMatIndex];
+        std::cout<<"Original matrix\n";
+        originalMatrix.printMatrix();
+        Matrix firstFilteredMatrix=originalMatrix.applyFilter(readFilters[filterMatIndex]);
+        std::cout<<"Matrix after the first filter\n";
+        firstFilteredMatrix.printMatrix();
+
+        std::string outFileName;
+        std::cout<<"Write the file name that you want to write the matrix: ";
+        std::cin>>outFileName;
+        firstFilteredMatrix.writeToFile(outFileName);
     }
-    out.printMatrix();
 
-    std::string outFileName;
-    std::cout<<"Write the file name that you want to write the matrix: ";
-    std::cin>>outFileName;
-    out.writeToFile(outFileName);
+    //Test several operation results
+    Test::test(matrixFileName, numOfMatrices, writeMatrices);
 
-//    int toDeleteFile=0;
-//    std::cout<<"Please input true if you want to delete the files that you have created, else false: ";
-//    std::cin>>toDeleteFile;
-//
-//    if(toDeleteFile==1){
-//        if(std::remove(matFileName.c_str())){
-//            std::cout<<matFileName<<" was deleted successfully\n";
-//        }
-//        else{
-//            std::cout<<"there was an error during the deletion of file "<<matFileName<<'\n';
-//        }
-//        if(std::remove(filtersFileName.c_str())){
-//            std::cout<<filtersFileName<<" was deleted successfully\n";
-//        }
-//        else{
-//            std::cout<<"there was an error during the deletion of file "<<filtersFileName<<'\n';
-//        }
-//    }
-//    else{
-//        std::cout<<"There was no file deletion specified\n";
-//    }
+    deleteFiles(matrixFileName, filterFileName);
+
 }
