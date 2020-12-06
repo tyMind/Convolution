@@ -3,4 +3,4 @@ project(Convolution)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(Convolution main.cpp Matrix.cpp Matrix.h)
+add_executable(Convolution main.cpp Matrix.cpp Matrix.h Test.cpp Test.h)
