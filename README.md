@@ -1,19 +1,19 @@
-#Application Format
+# Application Format
 
 User input(important ones)
-*Number of matrices to write to the file
-*Number of filter matrices to write to the file
-*Names of the files that the application must use for writing and reading matrices
-*Matrix and filter indexes on which the filter operation must be performed
+* Number of matrices to write to the file
+* Number of filter matrices to write to the file
+* Names of the files that the application must use for writing and reading matrices
+* Matrix and filter indexes on which the filter operation must be performed
 
 Overall files’ formats must look like this: 
-*Number of matrices 
-*Number of rows and columns for the first matrix
-*First matrix data
-*An empty line between the matrices
-*Number of rows and columns for the second matrix
-*Second matrix data
-*...
+* Number of matrices 
+* Number of rows and columns for the first matrix
+* First matrix data
+* An empty line between the matrices
+* Number of rows and columns for the second matrix
+* Second matrix data
+* ...
 
 For the implementation of this problem, a Matrix class was created. It consists of static and non-static functions, which perform read and write operations on the files and do some operations on the Matrix class objects(such as applying a filter to the main matrix). 
 
